@@ -102,24 +102,24 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>1.6</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                        <configuration>
-                            <keyname>2DAD9425307EC268</keyname>
-                            <passphraseServerId>clarity.gpg</passphraseServerId>
-                            <gpgArguments>--pinentry-mode=loopback</gpgArguments>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+            <!--<plugin>-->
+                <!--<artifactId>maven-gpg-plugin</artifactId>-->
+                <!--<version>1.6</version>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<id>sign-artifacts</id>-->
+                        <!--<phase>verify</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>sign</goal>-->
+                        <!--</goals>-->
+                        <!--<configuration>-->
+                            <!--<keyname>2DAD9425307EC268</keyname>-->
+                            <!--<passphraseServerId>clarity.gpg</passphraseServerId>-->
+                            <!--<gpgArguments>&#45;&#45;pinentry-mode=loopback</gpgArguments>-->
+                        <!--</configuration>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+            <!--</plugin>-->
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
