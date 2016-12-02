@@ -1,10 +1,16 @@
 package skadistats.clarity.source;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import skadistats.clarity.exception.BytesNotReadException;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
 public class InputStreamSource extends Source {
+
+    private static final Logger log = LoggerFactory.getLogger(InputStreamSource.class);
 
     private final InputStream stream;
     private int position;
@@ -29,7 +35,11 @@ public class InputStreamSource extends Source {
         }
         while (position != newPosition) {
             int r = Math.min(dummy.length, newPosition - position);
-            readBytes(dummy, 0, r);
+            try {
+                readBytes(dummy, 0, r);
+            }catch (BytesNotReadException ex){
+                log.debug("Reached end of file. Save offsed counter and skip processing.");
+            }
         }
     }
 
@@ -44,7 +54,7 @@ public class InputStreamSource extends Source {
     }
 
     @Override
-    public void readBytes(byte[] dest, int offset, int length) throws IOException {
+    public void readBytes(byte[] dest, int offset, int length) throws IOException, BytesNotReadException {
         if(lastOffset != -1){
             offset = lastOffset;
         }
@@ -55,6 +65,7 @@ public class InputStreamSource extends Source {
                 //throw new EOFException();
                 // when on end of file does not throw exception but skip it and remember where it stopped
                 lastOffset = offset;
+                throw new BytesNotReadException();
             }else{
                 lastOffset = -1;
             }

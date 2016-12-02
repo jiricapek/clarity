@@ -1,5 +1,6 @@
 package skadistats.clarity.processor.runner;
 
+import skadistats.clarity.exception.BytesNotReadException;
 import skadistats.clarity.source.Source;
 
 import java.io.IOException;
@@ -27,7 +28,7 @@ public class SimpleRunner extends AbstractRunner<SimpleRunner> {
         }
     };
 
-    public SimpleRunner(Source s) throws IOException {
+    public SimpleRunner(Source s) throws IOException, BytesNotReadException {
         super(s, s.readEngineType());
         this.loopController = new LoopController(controllerFunc);
     }

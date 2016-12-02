@@ -1,5 +1,6 @@
 package skadistats.clarity.source;
 
+import skadistats.clarity.exception.BytesNotReadException;
 import skadistats.clarity.model.EngineType;
 import skadistats.clarity.wire.common.proto.Demo;
 
@@ -62,7 +63,7 @@ public abstract class Source {
      * @param length the number of bytes to read
      * @throws IOException if the data cannot be read
      */
-    public abstract void readBytes(byte[] dest, int offset, int length) throws IOException;
+    public abstract void readBytes(byte[] dest, int offset, int length) throws IOException, BytesNotReadException;
 
     /**
      * allocates a new byte array with the specified {@code length} bytes and fills it with data
@@ -71,7 +72,7 @@ public abstract class Source {
      * @return the filled byte array
      * @throws IOException if the data cannot be read
      */
-    public byte[] readBytes(int length) throws IOException {
+    public byte[] readBytes(int length) throws IOException, BytesNotReadException {
         byte[] dst = new byte[length];
         readBytes(dst, 0, length);
         return dst;
@@ -117,7 +118,7 @@ public abstract class Source {
      * @return the int
      * @throws IOException if the data cannot be read
      */
-    public int readFixedInt32() throws IOException {
+    public int readFixedInt32() throws IOException, BytesNotReadException {
         return ByteBuffer.wrap(readBytes(4)).order(ByteOrder.LITTLE_ENDIAN).asIntBuffer().get();
     }
 
@@ -136,7 +137,7 @@ public abstract class Source {
      *
      * @throws IOException if there is not enough data left, or the data is malformed
      */
-    public void skipVarInt32() throws IOException {
+    public void skipVarInt32() throws IOException, BytesNotReadException {
         if (readByte() >= 0) return;
         if (readByte() >= 0) return;
         if (readByte() >= 0) return;
@@ -150,7 +151,7 @@ public abstract class Source {
      *
      * @throws IOException if there is not enough data or the if no valid magic was found
      */
-    public EngineType readEngineType() throws IOException {
+    public EngineType readEngineType() throws IOException, BytesNotReadException {
         try {
             EngineType et = EngineType.forMagic(new String(readBytes(8)));
             if (et == null) {
@@ -207,7 +208,7 @@ public abstract class Source {
      * @return the last tick
      * @throws IOException if the position cannot be adjusted, or the data is invalid
      */
-    public int getLastTick() throws IOException {
+    public int getLastTick() throws IOException, BytesNotReadException {
         if (lastTick == null) {
             setPosition(8);
             setPosition(readFixedInt32());

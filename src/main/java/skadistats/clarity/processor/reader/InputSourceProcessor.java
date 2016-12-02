@@ -11,6 +11,7 @@ import skadistats.clarity.event.Event;
 import skadistats.clarity.event.EventListener;
 import skadistats.clarity.event.Initializer;
 import skadistats.clarity.event.Provides;
+import skadistats.clarity.exception.BytesNotReadException;
 import skadistats.clarity.model.EngineType;
 import skadistats.clarity.processor.runner.Context;
 import skadistats.clarity.processor.runner.LoopController;
@@ -74,7 +75,7 @@ public class InputSourceProcessor {
         }
     }
 
-    private ByteString readPacket(Source source, int size, boolean isCompressed) throws IOException {
+    private ByteString readPacket(Source source, int size, boolean isCompressed) throws IOException, BytesNotReadException {
         ensureBufferCapacity(0, size);
         source.readBytes(buffer[0], 0, size);
         if (isCompressed) {
@@ -161,60 +162,65 @@ public class InputSourceProcessor {
             if (size < 0) {
                 throw new IOException(String.format("invalid negative demo packet size (%d).", size));
             }
-            Class<? extends GeneratedMessage> messageClass = DemoPackets.classForKind(kind);
-            if (messageClass == null) {
-                logUnknownMessage(ctx, "top level", kind);
-                src.skipBytes(size);
-            } else if (messageClass == Demo.CDemoPacket.class) {
-                Demo.CDemoPacket message = (Demo.CDemoPacket) Packet.parse(messageClass, readPacket(src, size, isCompressed));
-                ctx.createEvent(OnMessageContainer.class, Class.class, ByteString.class).raise(Demo.CDemoPacket.class, message.getData());
-            } else if (ctx.getEngineType().isSendTablesContainer() && messageClass == Demo.CDemoSendTables.class) {
-                Demo.CDemoSendTables message = (Demo.CDemoSendTables) Packet.parse(messageClass, readPacket(src, size, isCompressed));
-                ctx.createEvent(OnMessageContainer.class, Class.class, ByteString.class).raise(Demo.CDemoSendTables.class, message.getData());
-            } else if (messageClass == Demo.CDemoFullPacket.class) {
-                if (evFull != null || evReset != null) {
-                    Demo.CDemoFullPacket message = (Demo.CDemoFullPacket) Packet.parse(messageClass, readPacket(src, size, isCompressed));
-                    if (evFull != null) {
-                        evFull.raise(message);
-                    }
-                    if (evReset != null) {
-                        ctl.markResetRelevantPacket(tick, kind, offset);
-                        switch (loopCtl) {
-                            case RESET_ACCUMULATE:
-                                evReset.raise(message.getStringTable(), ResetPhase.ACCUMULATE);
-                                resetFullPacketData = message.getPacket().getData();
-                                break;
-                        }
-                    }
-                } else {
+
+            try {
+                Class<? extends GeneratedMessage> messageClass = DemoPackets.classForKind(kind);
+                if (messageClass == null) {
+                    logUnknownMessage(ctx, "top level", kind);
                     src.skipBytes(size);
-                }
-            } else {
-                boolean isStringTables = messageClass == Demo.CDemoStringTables.class;
-                boolean isSyncTick = messageClass == Demo.CDemoSyncTick.class;
-                boolean resetRelevant = evReset != null && (isStringTables || isSyncTick);
-                if (isSyncTick) {
-                    ctl.setSyncTickSeen(true);
-                }
-                Event<OnMessage> ev = ctx.createEvent(OnMessage.class, messageClass);
-                if (ev.isListenedTo() || resetRelevant) {
-                    GeneratedMessage message = Packet.parse(messageClass, readPacket(src, size, isCompressed));
-                    if (ev.isListenedTo()) {
-                        ev.raise(message);
-                    }
-                    if (resetRelevant) {
-                        ctl.markResetRelevantPacket(tick, kind, offset);
-                        if (isStringTables) {
+                } else if (messageClass == Demo.CDemoPacket.class) {
+                    Demo.CDemoPacket message = (Demo.CDemoPacket) Packet.parse(messageClass, readPacket(src, size, isCompressed));
+                    ctx.createEvent(OnMessageContainer.class, Class.class, ByteString.class).raise(Demo.CDemoPacket.class, message.getData());
+                } else if (ctx.getEngineType().isSendTablesContainer() && messageClass == Demo.CDemoSendTables.class) {
+                    Demo.CDemoSendTables message = (Demo.CDemoSendTables) Packet.parse(messageClass, readPacket(src, size, isCompressed));
+                    ctx.createEvent(OnMessageContainer.class, Class.class, ByteString.class).raise(Demo.CDemoSendTables.class, message.getData());
+                } else if (messageClass == Demo.CDemoFullPacket.class) {
+                    if (evFull != null || evReset != null) {
+                        Demo.CDemoFullPacket message = (Demo.CDemoFullPacket) Packet.parse(messageClass, readPacket(src, size, isCompressed));
+                        if (evFull != null) {
+                            evFull.raise(message);
+                        }
+                        if (evReset != null) {
+                            ctl.markResetRelevantPacket(tick, kind, offset);
                             switch (loopCtl) {
                                 case RESET_ACCUMULATE:
-                                    evReset.raise(message, ResetPhase.ACCUMULATE);
+                                    evReset.raise(message.getStringTable(), ResetPhase.ACCUMULATE);
+                                    resetFullPacketData = message.getPacket().getData();
                                     break;
                             }
                         }
+                    } else {
+                        src.skipBytes(size);
                     }
                 } else {
-                    src.skipBytes(size);
+                    boolean isStringTables = messageClass == Demo.CDemoStringTables.class;
+                    boolean isSyncTick = messageClass == Demo.CDemoSyncTick.class;
+                    boolean resetRelevant = evReset != null && (isStringTables || isSyncTick);
+                    if (isSyncTick) {
+                        ctl.setSyncTickSeen(true);
+                    }
+                    Event<OnMessage> ev = ctx.createEvent(OnMessage.class, messageClass);
+                    if (ev.isListenedTo() || resetRelevant) {
+                        GeneratedMessage message = Packet.parse(messageClass, readPacket(src, size, isCompressed));
+                        if (ev.isListenedTo()) {
+                            ev.raise(message);
+                        }
+                        if (resetRelevant) {
+                            ctl.markResetRelevantPacket(tick, kind, offset);
+                            if (isStringTables) {
+                                switch (loopCtl) {
+                                    case RESET_ACCUMULATE:
+                                        evReset.raise(message, ResetPhase.ACCUMULATE);
+                                        break;
+                                }
+                            }
+                        }
+                    } else {
+                        src.skipBytes(size);
+                    }
                 }
+            } catch (BytesNotReadException ex){
+                log.debug("Reached end of file. Save offsed counter and skip processing.");
             }
         }
     }

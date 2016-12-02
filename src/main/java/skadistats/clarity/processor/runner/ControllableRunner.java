@@ -1,5 +1,6 @@
 package skadistats.clarity.processor.runner;
 
+import skadistats.clarity.exception.BytesNotReadException;
 import skadistats.clarity.source.PacketPosition;
 import skadistats.clarity.source.Source;
 import skadistats.clarity.wire.common.proto.Demo;
@@ -191,7 +192,7 @@ public class ControllableRunner extends AbstractRunner<ControllableRunner> {
         }
     }
 
-    public ControllableRunner(Source s) throws IOException {
+    public ControllableRunner(Source s) throws IOException, BytesNotReadException {
         super(s, s.readEngineType());
         resetRelevantPackets.add(PacketPosition.createPacketPosition(-1, Demo.EDemoCommands.DEM_SyncTick_VALUE, s.getPosition()));
         upcomingTick = tick;
@@ -272,7 +273,7 @@ public class ControllableRunner extends AbstractRunner<ControllableRunner> {
         }
     }
 
-    public int getLastTick() throws IOException {
+    public int getLastTick() throws IOException, BytesNotReadException {
         if (lastTick == null) {
             lock.lock();
             try {

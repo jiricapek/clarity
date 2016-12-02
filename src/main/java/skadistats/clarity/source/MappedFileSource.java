@@ -1,5 +1,6 @@
 package skadistats.clarity.source;
 
+import skadistats.clarity.exception.BytesNotReadException;
 import sun.nio.ch.DirectBuffer;
 
 import java.io.EOFException;
@@ -53,7 +54,7 @@ public class MappedFileSource extends Source {
     }
 
     @Override
-    public int getLastTick() throws IOException {
+    public int getLastTick() throws IOException, BytesNotReadException {
         if (lastTick == null) {
             int backup = getPosition();
             super.getLastTick();

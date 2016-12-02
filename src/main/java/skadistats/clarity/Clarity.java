@@ -2,6 +2,7 @@ package skadistats.clarity;
 
 import com.google.protobuf.ZeroCopy;
 import org.xerial.snappy.Snappy;
+import skadistats.clarity.exception.BytesNotReadException;
 import skadistats.clarity.model.EngineType;
 import skadistats.clarity.source.InputStreamSource;
 import skadistats.clarity.source.MappedFileSource;
@@ -21,7 +22,7 @@ public class Clarity {
      * @return the {@code CDemoFileInfo} protobuf message
      * @throws IOException if the given file is non-existing or is no valid demo-file
      */
-    public static Demo.CDemoFileInfo infoForFile(String fileName) throws IOException {
+    public static Demo.CDemoFileInfo infoForFile(String fileName) throws IOException, BytesNotReadException {
         return infoForSource(new MappedFileSource(fileName));
     }
 
@@ -32,7 +33,7 @@ public class Clarity {
      * @return the {@code CDemoFileInfo} protobuf message
      * @throws IOException if the given stream is invalid
      */
-    public static Demo.CDemoFileInfo infoForStream(final InputStream stream) throws IOException {
+    public static Demo.CDemoFileInfo infoForStream(final InputStream stream) throws IOException, BytesNotReadException {
         return infoForSource(new InputStreamSource(stream));
     }
 
@@ -44,7 +45,7 @@ public class Clarity {
      * @throws IOException if the given source is invalid
      * @see Source
      */
-    public static Demo.CDemoFileInfo infoForSource(final Source source) throws IOException {
+    public static Demo.CDemoFileInfo infoForSource(final Source source) throws IOException, BytesNotReadException {
         EngineType engineType = source.readEngineType();
         source.setPosition(source.readFixedInt32());
         int kind = source.readVarInt32();
