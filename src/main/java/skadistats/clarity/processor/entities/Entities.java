@@ -30,6 +30,8 @@ public class Entities {
 
     private static final Logger log = LoggerFactory.getLogger(Entities.class);
 
+    private static final String EMPTY_STRING = "";
+
     private final Map<Integer, BaselineEntry> baselineEntries = new HashMap<>();
     private Entity[] entities;
     private int[] deletions;
@@ -114,7 +116,12 @@ public class Entities {
 
     @OnStringTableEntry("instancebaseline")
     public void onBaselineEntry(Context ctx, StringTable table, int index, String key, ByteString value) {
-        baselineEntries.put(Integer.valueOf(key), new BaselineEntry(value));
+        if(key != EMPTY_STRING){
+            baselineEntries.put(Integer.valueOf(key), new BaselineEntry(value));
+        }else{
+            log.warn("Missing empty key. Cannot find anything without it inside 'instancebaseline' table.");
+        }
+
     }
 
     @OnMessage(NetMessages.CSVCMsg_PacketEntities.class)
