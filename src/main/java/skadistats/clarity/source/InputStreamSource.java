@@ -10,6 +10,8 @@ public class InputStreamSource extends Source {
     private int position;
     private byte[] dummy = new byte[32768];
 
+    private int lastOffset = -1;
+
     public InputStreamSource(InputStream stream) {
         this.stream = stream;
         this.position = 0;
@@ -43,10 +45,18 @@ public class InputStreamSource extends Source {
 
     @Override
     public void readBytes(byte[] dest, int offset, int length) throws IOException {
+        if(lastOffset != -1){
+            offset = lastOffset;
+        }
+
         while (length > 0) {
             int r = stream.read(dest, offset, length);
             if (r == -1) {
-                throw new EOFException();
+                //throw new EOFException();
+                // when on end of file does not throw exception but skip it and remember where it stopped
+                lastOffset = offset;
+            }else{
+                lastOffset = -1;
             }
             position += r;
             offset += r;
