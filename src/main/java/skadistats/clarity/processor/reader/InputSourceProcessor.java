@@ -93,7 +93,7 @@ public class InputSourceProcessor {
     }
 
     @OnInputSource
-    public void processSource(Context ctx, Source src, LoopController ctl) throws IOException {
+    public void processSource(Context ctx, Source src, LoopController ctl) throws IOException, BytesNotReadException {
         int compressedFlag = ctx.getEngineType().getCompressedFlag();
 
         ByteString resetFullPacketData = null;

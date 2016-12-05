@@ -53,7 +53,7 @@ public abstract class Source {
      *
      * @throws IOException if the data cannot be read
      */
-    public abstract byte readByte() throws IOException;
+    public abstract byte readByte() throws IOException, BytesNotReadException;
 
     /**
      * reads {@code len} bytes and puts them into {@code dst} at the specified {@code offset}
@@ -84,7 +84,7 @@ public abstract class Source {
      * @return the int
      * @throws IOException if the data cannot be read, or is not a valid variable int32
      */
-    public int readVarInt32() throws IOException {
+    public int readVarInt32() throws IOException, BytesNotReadException {
         byte tmp = readByte();
         if (tmp >= 0) {
             return tmp;
@@ -171,7 +171,7 @@ public abstract class Source {
      * @param packetPositions a set of positions found in previous runs
      * @throws IOException if the underlying data is invalid
      */
-    public TreeSet<PacketPosition> getResetPacketsBeforeTick(EngineType engineType, int wantedTick, TreeSet<PacketPosition> packetPositions) throws IOException {
+    public TreeSet<PacketPosition> getResetPacketsBeforeTick(EngineType engineType, int wantedTick, TreeSet<PacketPosition> packetPositions) throws IOException, BytesNotReadException {
         int backup = getPosition();
         PacketPosition wanted = PacketPosition.createPacketPosition(wantedTick, Demo.EDemoCommands.DEM_FullPacket_VALUE, 0);
         if (packetPositions.tailSet(wanted, true).size() == 0) {
@@ -225,5 +225,4 @@ public abstract class Source {
      */
     public void close() throws IOException {
     }
-
 }

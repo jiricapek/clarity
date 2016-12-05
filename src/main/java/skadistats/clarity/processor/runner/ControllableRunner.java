@@ -123,32 +123,36 @@ public class ControllableRunner extends AbstractRunner<ControllableRunner> {
     };
 
     private void calculateResetSteps() throws IOException {
-        TreeSet<PacketPosition> seekPositions = source.getResetPacketsBeforeTick(engineType, wantedTick, resetRelevantPackets);
-        seekPositions.pollFirst();
+        try {
+            TreeSet<PacketPosition> seekPositions = source.getResetPacketsBeforeTick(engineType, wantedTick, resetRelevantPackets);
+            seekPositions.pollFirst();
 
-        resetSteps = new LinkedList<>();
-        resetSteps.add(new ResetStep(LoopController.Command.RESET_CLEAR, null));
-        while (seekPositions.size() > 0) {
-            PacketPosition pp = seekPositions.pollFirst();
-            switch (pp.getKind()) {
-                case STRINGTABLE:
-                case FULL_PACKET:
-                    resetSteps.add(new ResetStep(LoopController.Command.CONTINUE, pp.getOffset()));
-                    resetSteps.add(new ResetStep(LoopController.Command.RESET_ACCUMULATE, null));
-                    if (seekPositions.size() == 0) {
-                        resetSteps.add(new ResetStep(LoopController.Command.RESET_APPLY, null));
-                    }
-                    break;
-                case SYNC:
-                    if (seekPositions.size() == 0) {
+            resetSteps = new LinkedList<>();
+            resetSteps.add(new ResetStep(LoopController.Command.RESET_CLEAR, null));
+            while (seekPositions.size() > 0) {
+                PacketPosition pp = seekPositions.pollFirst();
+                switch (pp.getKind()) {
+                    case STRINGTABLE:
+                    case FULL_PACKET:
                         resetSteps.add(new ResetStep(LoopController.Command.CONTINUE, pp.getOffset()));
-                        resetSteps.add(new ResetStep(LoopController.Command.RESET_APPLY, null));
-                    }
-                    break;
+                        resetSteps.add(new ResetStep(LoopController.Command.RESET_ACCUMULATE, null));
+                        if (seekPositions.size() == 0) {
+                            resetSteps.add(new ResetStep(LoopController.Command.RESET_APPLY, null));
+                        }
+                        break;
+                    case SYNC:
+                        if (seekPositions.size() == 0) {
+                            resetSteps.add(new ResetStep(LoopController.Command.CONTINUE, pp.getOffset()));
+                            resetSteps.add(new ResetStep(LoopController.Command.RESET_APPLY, null));
+                        }
+                        break;
+                }
             }
+            resetSteps.add(new ResetStep(LoopController.Command.RESET_FORWARD, null));
+            resetSteps.add(new ResetStep(LoopController.Command.RESET_COMPLETE, null));
+        }catch (BytesNotReadException e){
+            log.info("Reached end of file. File reloaded and calculate reset steps skipped.");
         }
-        resetSteps.add(new ResetStep(LoopController.Command.RESET_FORWARD, null));
-        resetSteps.add(new ResetStep(LoopController.Command.RESET_COMPLETE, null));
     }
 
 
