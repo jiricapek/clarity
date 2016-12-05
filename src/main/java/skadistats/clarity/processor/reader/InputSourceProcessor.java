@@ -106,6 +106,8 @@ public class InputSourceProcessor {
         LoopController.Command loopCtl;
 
         main: while (true) {
+            try {
+
             offset = src.getPosition();
             try {
                 try {
@@ -168,7 +170,7 @@ public class InputSourceProcessor {
                 throw new IOException(String.format("invalid negative demo packet size (%d).", size));
             }
 
-            try {
+
                 Class<? extends GeneratedMessage> messageClass = DemoPackets.classForKind(kind);
                 if (messageClass == null) {
                     logUnknownMessage(ctx, "top level", kind);
