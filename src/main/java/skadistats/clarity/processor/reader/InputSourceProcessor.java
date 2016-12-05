@@ -93,7 +93,7 @@ public class InputSourceProcessor {
     }
 
     @OnInputSource
-    public void processSource(Context ctx, Source src, LoopController ctl) throws IOException, BytesNotReadException {
+    public void processSource(Context ctx, Source src, LoopController ctl) throws IOException {
         int compressedFlag = ctx.getEngineType().getCompressedFlag();
 
         ByteString resetFullPacketData = null;
@@ -108,11 +108,16 @@ public class InputSourceProcessor {
         main: while (true) {
             offset = src.getPosition();
             try {
-                kind = src.readVarInt32();
-                isCompressed = (kind & compressedFlag) == compressedFlag;
-                kind &= ~compressedFlag;
-                tick = src.readVarInt32();
-                size = src.readVarInt32();
+                try {
+                    kind = src.readVarInt32();
+                    isCompressed = (kind & compressedFlag) == compressedFlag;
+                    kind &= ~compressedFlag;
+                    tick = src.readVarInt32();
+                    size = src.readVarInt32();
+                }catch (BytesNotReadException ex){
+                    log.info("Reached file end. Reloaded file and skip processing.");
+                    continue;
+                }
             } catch (EOFException e) {
                 kind = -1;
                 isCompressed = false;
