@@ -16,14 +16,14 @@ public class SimpleRunner extends AbstractRunner<SimpleRunner> {
                 }
                 return LoopController.Command.FALLTHROUGH;
             }
-//            if (upcomingTick != tick) {
-//                if (upcomingTick != Integer.MAX_VALUE) {
-//                    endTicksUntil(ctx, upcomingTick - 1);
-//                    startNewTick(ctx, upcomingTick);
-//                } else {
-//                    endTicksUntil(ctx, tick);
-//                }
-//            }
+            if (upcomingTick != tick) {
+                if (upcomingTick != Integer.MAX_VALUE) {
+                    endTicksUntil(ctx, upcomingTick - 1);
+                    startNewTick(ctx, upcomingTick);
+                } else {
+                    endTicksUntil(ctx, tick);
+                }
+            }
             return LoopController.Command.FALLTHROUGH;
         }
     };

@@ -116,7 +116,7 @@ public class InputSourceProcessor {
                     size = src.readVarInt32();
                 }catch (BytesNotReadException ex){
                     log.info("Reached file end. Reloaded file and skip processing.");
-                    continue;
+                    continue main;
                 }
             } catch (EOFException e) {
                 kind = -1;
@@ -226,6 +226,9 @@ public class InputSourceProcessor {
                 }
             } catch (BytesNotReadException ex){
                 log.debug("Reached end of file. Save offsed counter and skip processing.");
+            } catch (RuntimeException ex){
+                log.debug("Probably failed on incomplete data. Skip this step.");
+                continue main;
             }
         }
     }
