@@ -33,8 +33,8 @@ public class Clarity {
      * @return the {@code CDemoFileInfo} protobuf message
      * @throws IOException if the given stream is invalid
      */
-    public static Demo.CDemoFileInfo infoForStream(final InputStream stream) throws IOException, BytesNotReadException {
-        return infoForSource(new InputStreamSource(stream));
+    public static Demo.CDemoFileInfo infoForStream(final InputStream stream, String path) throws IOException, BytesNotReadException {
+        return infoForSource(new InputStreamSource(stream, path));
     }
 
     /**
