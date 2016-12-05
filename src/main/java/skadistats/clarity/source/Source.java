@@ -104,7 +104,8 @@ public abstract class Source {
                     result |= (tmp & 0x7f) << 21;
                     result |= (tmp = readByte()) << 28;
                     if (tmp < 0) {
-                        throw new IOException("malformed varint detected");
+                        //throw new IOException("malformed varint detected");
+                        throw new BytesNotReadException();
                     }
                 }
             }
